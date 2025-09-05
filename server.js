@@ -1,5 +1,5 @@
 import express from "express";
-import companyRoutes from "../server/routes/ineco.routes.js";
+// import companyRoutes from "../server/routes/ineco.routes.js";
 
 import cors from "cors";
 
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/api", companyRoutes);
+// app.use("/api", companyRoutes);
 app.use("/",(req,res)=>{
     return res.json({message:"Welcome Inecosystem Bridge"})
 })
