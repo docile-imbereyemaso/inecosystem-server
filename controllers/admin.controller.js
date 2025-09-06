@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import Job from '../models/Job.js';
 import Insight from '../models/Insight.js';
+import { Op } from 'sequelize';
+
 
 // APPROVE PRIVATE SECTOR USER (TVET only)
 export const approvePrivateSectorUser = async (req, res) => {
@@ -71,6 +73,115 @@ export const getPendingApprovals = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+export const getAll = async (req, res) => {
+  try {
+    // Check if user is TVET admin
+    if (req.user.user_type !== 'tvet') {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Only TVET administrators can view all private_sectors" 
+      });
+    }
+
+    const allPrivateSectors = await User.findAll({
+      where: { user_type: 'private_sector' },
+      attributes: { exclude: ['password'] }
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      users: allPrivateSectors 
+    });
+  } catch (error) {
+    console.error("Get all private sectors error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching all private sectors", 
+      error: error.message 
+    });
+  }
+};
+
+
+
+export const getPrivateSectorByStatus = async (req, res) => {
+  try {
+    // Only TVET admins can access
+    if (req.user.user_type !== "tvet") {
+      return res.status(403).json({
+        success: false,
+        message: "Only TVET administrators can view users",
+      });
+    }
+
+    // Optional: allow filtering by status from query params
+    const statusFilter = req.query.status; // e.g., ?status=pending
+
+    // Fetch all users except TVET
+    const allUsers = await User.findAll({
+      where: {
+        user_type: { [Op.not]: "tvet" }, // exclude TVET users
+        ...(statusFilter ? { status: statusFilter } : {}), // optional status filter
+      },
+      attributes: { exclude: ["password"] },
+    });
+
+    res.status(200).json({
+      success: true,
+      users: allUsers,
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching users",
+      error: error.message,
+    });
+  }
+};
+
+
+
+export const getAllUsers = async (req, res) => {
+  try {
+    // Optional: Check if user is TVET admin
+    if (req.user.user_type !== 'tvet') {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Only TVET administrators can view all users" 
+      });
+    }
+
+    // Fetch all users excluding TVET
+    const allUsers = await User.findAll({
+      where: {
+        user_type: {
+          [Op.ne]: 'tvet'  // Not equal to 'tvet'
+        }
+      },
+      attributes: { exclude: ['password'] } // Exclude passwords for security
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      users: allUsers 
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching all users", 
+      error: error.message 
+    });
+  }
+};
+
+
 
 // ADD COMMENT TO INSIGHT (TVET only)
 export const addInsightComment = async (req, res) => {

@@ -22,7 +22,7 @@ export const getUserProfile = async (req, res) => {
         {
           model: Company,
           as: 'companies',
-          attributes: ['company_id', 'name', 'industry', 'description'],
+
           where: isOwnProfile ? {} : { is_verified: true },
           required: false
         }
@@ -56,10 +56,7 @@ export const getUserProfile = async (req, res) => {
       }
     }
     
-    res.status(200).json({ 
-      success: true, 
-      user 
-    });
+    res.status(200).json(user);
   } catch (error) {
     console.error("Get user profile error:", error);
     res.status(500).json({ 
