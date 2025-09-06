@@ -22,7 +22,6 @@ export const getUserProfile = async (req, res) => {
         {
           model: Company,
           as: 'companies',
-          attributes: ['company_id', 'name', 'industry', 'description'],
           where: isOwnProfile ? {} : { is_verified: true },
           required: false
         }
