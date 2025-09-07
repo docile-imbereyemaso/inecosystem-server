@@ -6,6 +6,14 @@ const Internship = sequelize.define('Internship', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  }, 
+   company_id: {
+    type: DataTypes.INTEGER, // This should match the users table primary key type
+    allowNull: false,
+    references: {
+      model: 'users', // Name of the table
+      key: 'user_id'  // Name of the column in users table
+    }
   },
   name: {
     type: DataTypes.STRING,

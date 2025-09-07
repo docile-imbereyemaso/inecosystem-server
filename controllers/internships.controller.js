@@ -1,9 +1,16 @@
 import Internship from '../models/Internship.js';
 import User from '../models/User.js';
+import { Op } from 'sequelize';
 
-// CREATE INTERNSHIP (Private sector only)
+// CREATE INTERNSHIP - WITH DEBUGGING
 export const createInternship = async (req, res) => {
   try {
+    console.log("=== DEBUG START ===");
+    console.log("Request user object:", req.user);
+    console.log("Request user ID:", req.user.user_id);
+    console.log("Request user type:", req.user.user_type);
+    console.log("Request body:", req.body);
+
     // Check if user is approved private sector
     if (req.user.user_type !== 'private_sector' || !req.user.is_approved) {
       return res.status(403).json({ 
@@ -12,10 +19,20 @@ export const createInternship = async (req, res) => {
       });
     }
 
+    // Check if the user actually exists in database
+    const user = await User.findByPk(req.user.user_id);
+    console.log("User found in database:", user ? user.toJSON() : "USER NOT FOUND");
+    
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Your user account cannot be found in the database" 
+      });
+    }
+
     const { 
       name, type, level, sponsorship, sector, period, 
-      application_open, deadline, description, requirements, 
-      benefits, location, duration, stipend, skills_required 
+      application_open, deadline
     } = req.body;
 
     // Validation
@@ -26,6 +43,8 @@ export const createInternship = async (req, res) => {
       });
     }
 
+    console.log("Creating internship with company_id:", req.user.user_id);
+
     const internship = await Internship.create({
       name,
       type,
@@ -35,28 +54,15 @@ export const createInternship = async (req, res) => {
       period,
       application_open: application_open !== undefined ? application_open : true,
       deadline,
-      description,
-      requirements,
-      benefits,
-      location,
-      duration,
-      stipend,
-      skills_required: skills_required || [],
       company_id: req.user.user_id
     });
 
-    // Include company details in response
-    const internshipWithCompany = await Internship.findByPk(internship.internship_id, {
-      include: [{
-        model: User,
-        as: 'company',
-        attributes: ['user_id', 'first_name', 'last_name', 'company_name', 'email']
-      }]
-    });
+    console.log("Internship created successfully:", internship.toJSON());
+    console.log("=== DEBUG END ===");
 
     res.status(201).json({ 
       success: true, 
-      internship: internshipWithCompany,
+      internship,
       message: "Internship created successfully" 
     });
   } catch (error) {
@@ -69,40 +75,28 @@ export const createInternship = async (req, res) => {
   }
 };
 
-// GET ALL INTERNSHIPS
+
+// GET ALL INTERNSHIPS - MINIMAL VERSION
 export const getInternships = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sector, type, level, location } = req.query;
-    const offset = (page - 1) * limit;
-
-    // Build where clause for filters
-    const whereClause = { is_active: true };
+    console.log("=== GET INTERNSHIPS - MINIMAL ===");
     
-    if (sector) whereClause.sector = sector;
-    if (type) whereClause.type = type;
-    if (level) whereClause.level = level;
-    if (location) whereClause.location = { [Op.iLike]: `%${location}%` };
-
-    const { count, rows: internships } = await Internship.findAndCountAll({
-      where: whereClause,
-      include: [{
-        model: User,
-        as: 'company',
-        attributes: ['user_id', 'first_name', 'last_name', 'company_name', 'email']
-      }],
-      order: [['created_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: offset
+    // Get all internships without any filters
+    const internships = await Internship.findAll({
+      where: { is_active: true },
+      order: [['created_at', 'DESC']]
     });
+
+    console.log(`Found ${internships.length} internships`);
 
     res.status(200).json({ 
       success: true, 
       internships,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(count / limit),
-        totalItems: count,
-        itemsPerPage: parseInt(limit)
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: internships.length,
+        itemsPerPage: internships.length
       }
     });
   } catch (error) {
@@ -114,7 +108,6 @@ export const getInternships = async (req, res) => {
     });
   }
 };
-
 // GET INTERNSHIP BY ID
 export const getInternshipById = async (req, res) => {
   try {
