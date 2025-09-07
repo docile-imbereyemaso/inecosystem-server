@@ -111,35 +111,42 @@ export const getAll = async (req, res) => {
 
 export const getPrivateSectorByStatus = async (req, res) => {
   try {
-    // Only TVET admins can access
+    // ✅ Only TVET admins can access
     if (req.user.user_type !== "tvet") {
       return res.status(403).json({
         success: false,
-        message: "Only TVET administrators can view users",
+        message: "Only TVET administrators can view private sector users",
       });
     }
 
-    // Optional: allow filtering by status from query params
-    const statusFilter = req.query.status; // e.g., ?status=pending
+    // ✅ Optional filter from query: ?status=registered or ?status=pending
+    const { status } = req.query;
 
-    // Fetch all users except TVET
-    const allUsers = await User.findAll({
+    let filter = {};
+    if (status === "registered") {
+      filter = { is_approved: true };
+    } else if (status === "pending") {
+      filter = { is_approved: false };
+    }
+
+    // ✅ Fetch only private sector users
+    const privateSectors = await User.findAll({
       where: {
-        user_type: { [Op.not]: "tvet" }, // exclude TVET users
-        ...(statusFilter ? { status: statusFilter } : {}), // optional status filter
+        user_type: "private_sector", // only private sector
+        ...filter,                   // apply approval filter
       },
       attributes: { exclude: ["password"] },
     });
 
     res.status(200).json({
       success: true,
-      users: allUsers,
+      users: privateSectors,
     });
   } catch (error) {
-    console.error("Get all users error:", error);
+    console.error("Get private sector by status error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error fetching users",
+      message: "Server error fetching private sector users",
       error: error.message,
     });
   }
