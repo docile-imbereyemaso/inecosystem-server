@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import companiesRoutes from './routes/companies.routes.js';
 import jobsRoutes from './routes/jobs.routes.js';
+import jobsRouter from './routes/jobs.routes.js';
 import internshipsRoutes from './routes/internships.routes.js';
 import contributionsRoutes from './routes/contributions.routes.js';
 import insightsRoutes from './routes/insights.routes.js';
@@ -23,7 +24,32 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+
+const allowedOrigins = [
+  "http://localhost:5173",   // Vite dev server
+  "http://127.0.0.1:5173"    // sometimes vite runs here
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // allow cookies / auth headers
+}));
+
+
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -74,7 +100,7 @@ const startServer = async () => {
     console.log('Database connection established successfully.');
     
     // Sync models with database
-    await sequelize.sync({ alter: true });
+    // await sequelize.sync({ alter: true });
     console.log('Database synchronized successfully.');
     
     app.listen(PORT, () => {

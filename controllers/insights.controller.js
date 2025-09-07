@@ -1,4 +1,6 @@
 import db from '../models/index.js';
+// const { Op } = require('sequelize');
+import { Op } from 'sequelize';
 const { Insight, User } = db;
 
 // CREATE INSIGHT (Private sector only - approved)
@@ -62,6 +64,7 @@ export const createInsight = async (req, res) => {
   }
 };
 
+
 // GET ALL INSIGHTS
 export const getInsights = async (req, res) => {
   try {
@@ -85,28 +88,40 @@ export const getInsights = async (req, res) => {
     if (priority) whereClause.priority = priority;
     if (status) whereClause.status = status;
     if (created_by) whereClause.created_by = created_by;
-
+    
+    // return res.json({whereClause})
     // Private sector users can only see their own insights if not published
-    if (req.user.user_type === 'private_sector') {
-      if (!created_by || created_by !== req.user.user_id.toString()) {
-        whereClause.status = { [db.Sequelize.Op.ne]: 'draft' };
-      }
-    } else {
-      // Other users can't see draft insights
-      whereClause.status = { [db.Sequelize.Op.ne]: 'draft' };
-    }
+    // if (req.user.user_type === 'private_sector') {
+    //   if (!created_by || created_by !== req.user.user_id.toString()) {
+    //     // whereClause.status = { [Op.ne]: 'pending' };
+    //     whereClause.status = { [Op.ne]: 'pending' };
+    //   }
+    // } else {
+    //   // Other users can't see pending insights
+    //   whereClause.status = { [Op.ne]: 'pending' };
+    // }
 
     const { count, rows: insights } = await Insight.findAndCountAll({
       where: whereClause,
       include: [{
         model: User,
         as: 'author',
-        attributes: ['user_id', 'first_name', 'last_name', 'company_name', 'email', 'user_type']
+        attributes: ['user_id', 'first_name', 'last_name', 'company_name', 
+    'email', 'user_type']
       }],
       order: [[sortBy, sortOrder]],
       limit: parseInt(limit),
       offset: offset
     });
+
+    // const insights = await Insight.findAll({
+    //   include:[
+    //     {
+    //       model:User,
+    //       as:"author"
+    //     }
+    //   ]
+    // })
 
     res.status(200).json({ 
       success: true, 
@@ -148,8 +163,8 @@ export const getInsightById = async (req, res) => {
       });
     }
 
-    // Private sector users can only see their own draft insights
-    if (insight.status === 'draft' && insight.created_by !== req.user.user_id) {
+    // Private sector users can only see their own pending insights
+    if (insight.status === 'pending' && insight.created_by !== req.user.user_id) {
       return res.status(403).json({ 
         success: false, 
         message: "Access denied. This insight is not published." 
@@ -189,9 +204,9 @@ export const getUserInsights = async (req, res) => {
     
     if (status) whereClause.status = status;
     
-    // Only show non-draft insights to non-owners
+    // Only show non-pending insights to non-owners
     if (!isOwnInsights) {
-      whereClause.status = { [db.Sequelize.Op.ne]: 'draft' };
+      whereClause.status = { $ne: 'pending' };
     }
 
     const { count, rows: insights } = await Insight.findAndCountAll({
@@ -305,7 +320,7 @@ export const changeInsightStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['draft', 'pending', 'reviewed', 'implemented', 'rejected'].includes(status)) {
+    if (![ 'pending', 'reviewed', 'implemented', 'rejected'].includes(status)) {
       return res.status(400).json({ 
         success: false, 
         message: "Invalid status" 
@@ -350,7 +365,7 @@ export const getInsightsBySector = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // For individual users, filter by their sectors
-    let whereClause = { status: { [db.Sequelize.Op.ne]: 'draft' } };
+    let whereClause = { status: { [Op.ne]: 'pending' } };
     
     if (req.user.user_type === 'individual' && req.user.sectors && req.user.sectors.length > 0) {
       whereClause.sector = req.user.sectors;
@@ -402,7 +417,7 @@ export const searchInsights = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const whereClause = { 
-      status: { [db.Sequelize.Op.ne]: 'draft' } 
+      status: { [db.Sequelize.Op.ne]: 'pending' } 
     };
 
     if (query) {
