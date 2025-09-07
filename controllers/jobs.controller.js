@@ -175,6 +175,7 @@ export const getJobById = async (req, res) => {
 };
 
 // GET COMPANY'S JOBS (Private sector users)
+// GET COMPANY'S JOBS (Private sector users)
 export const getCompanyJobs = async (req, res) => {
   try {
     const { 
@@ -188,21 +189,30 @@ export const getCompanyJobs = async (req, res) => {
     const whereClause = { company_id: req.user.user_id };
     if (is_active !== undefined) whereClause.is_active = is_active;
 
+    // First get the jobs without including the company
     const { count, rows: jobs } = await Job.findAndCountAll({
       where: whereClause,
-      include: [{
-        model: User,
-        as: 'company',
-        attributes: ['user_id', 'first_name', 'last_name', 'company_name', 'email']
-      }],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),
       offset: offset
     });
 
+    // Then get company details separately
+    const company = await User.findByPk(req.user.user_id, {
+      attributes: ['user_id', 'first_name', 'last_name', 'company_name', 'email']
+    });
+
+    // Combine the data
+    const jobsWithCompany = jobs.map(job => {
+      return {
+        ...job.toJSON(),
+        company: company
+      };
+    });
+
     res.status(200).json({ 
       success: true, 
-      jobs,
+      jobs: jobsWithCompany,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(count / limit),
@@ -214,12 +224,11 @@ export const getCompanyJobs = async (req, res) => {
     console.error("Get company jobs error:", error);
     res.status(500).json({ 
       success: false, 
-      message: "Server error fetching company jobs", 
+      message: `Server error fetching company jobs ${req.user.user_id}`, 
       error: error.message 
     });
   }
 };
-
 // UPDATE JOB (Only the creator)
 export const updateJob = async (req, res) => {
   try {
@@ -261,7 +270,7 @@ export const updateJob = async (req, res) => {
   }
 };
 
-// DELETE JOB (Only the creator)
+// TEMPORARY: Hard delete for testing
 export const deleteJob = async (req, res) => {
   try {
     const { id } = req.params;
@@ -277,12 +286,13 @@ export const deleteJob = async (req, res) => {
       });
     }
 
-    // Soft delete by setting is_active to false
-    await job.update({ is_active: false });
+    // HARD DELETE for testing
+    await job.destroy();
 
     res.status(200).json({ 
       success: true, 
-      message: "Job deleted successfully" 
+      message: "Job deleted successfully",
+      deleted_job_id: id
     });
   } catch (error) {
     console.error("Delete job error:", error);
@@ -293,7 +303,6 @@ export const deleteJob = async (req, res) => {
     });
   }
 };
-
 // GET JOBS BY SECTOR (For individual users)
 export const getJobsBySector = async (req, res) => {
   try {
