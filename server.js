@@ -25,6 +25,13 @@ const app = express();
 // Middleware
 app.use(helmet());
 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+
 const allowedOrigins = [
   "http://localhost:5173",   // Vite dev server
   "http://127.0.0.1:5173"    // sometimes vite runs here
@@ -41,6 +48,7 @@ app.use(cors({
   },
   credentials: true, // allow cookies / auth headers
 }));
+
 
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
