@@ -414,3 +414,46 @@ export const searchJobs = async (req, res) => {
     });
   }
 };
+
+
+// WELL GETTING JOB
+
+export const getJobsAll = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      type, 
+      level, 
+      location,
+      sortBy = 'created_at',
+      sortOrder = 'DESC'
+    } = req.query;
+    
+    const offset = (page - 1) * limit;
+
+    const { count, rows: jobs } = await Job.findAndCountAll({
+      order: [[sortBy, sortOrder]],
+      limit: parseInt(limit),
+      offset: offset
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      jobs,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error("Get jobs error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching jobs", 
+      error: error.message 
+    });
+  }
+};
