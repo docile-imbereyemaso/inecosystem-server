@@ -81,12 +81,7 @@ export const getPendingApprovals = async (req, res) => {
 export const getAll = async (req, res) => {
   try {
     // Check if user is TVET admin
-    if (req.user.user_type !== 'tvet') {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Only TVET administrators can view all private_sectors" 
-      });
-    }
+   
 
     const allPrivateSectors = await User.findAll({
       where: { user_type: 'private_sector' },

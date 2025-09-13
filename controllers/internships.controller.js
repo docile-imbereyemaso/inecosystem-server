@@ -1,15 +1,12 @@
 import Internship from '../models/Internship.js';
 import User from '../models/User.js';
 import { Op } from 'sequelize';
+import { createNotification } from '../utils/helpers.js';
 
 // CREATE INTERNSHIP - WITH DEBUGGING
 export const createInternship = async (req, res) => {
   try {
-    console.log("=== DEBUG START ===");
-    console.log("Request user object:", req.user);
-    console.log("Request user ID:", req.user.user_id);
-    console.log("Request user type:", req.user.user_type);
-    console.log("Request body:", req.body);
+   
 
     // Check if user is approved private sector
     if (req.user.user_type !== 'private_sector' || !req.user.is_approved) {
@@ -21,8 +18,7 @@ export const createInternship = async (req, res) => {
 
     // Check if the user actually exists in database
     const user = await User.findByPk(req.user.user_id);
-    console.log("User found in database:", user ? user.toJSON() : "USER NOT FOUND");
-    
+ 
     if (!user) {
       return res.status(400).json({ 
         success: false, 
@@ -32,7 +28,7 @@ export const createInternship = async (req, res) => {
 
     const { 
       name, type, level, sponsorship, sector, period, 
-      application_open, deadline
+      application_open, deadline,description
     } = req.body;
 
     // Validation
@@ -43,12 +39,11 @@ export const createInternship = async (req, res) => {
       });
     }
 
-    console.log("Creating internship with company_id:", req.user.user_id);
-
     const internship = await Internship.create({
       name,
       type,
       level,
+      description,
       sponsorship: sponsorship || false,
       sector,
       period,
@@ -56,17 +51,21 @@ export const createInternship = async (req, res) => {
       deadline,
       company_id: req.user.user_id
     });
-
-    console.log("Internship created successfully:", internship.toJSON());
-    console.log("=== DEBUG END ===");
-
+      await createNotification({
+        title: "New Internship Created",
+        message: `Internship "${internship.name}" has been created.`,
+        recipient_type: 'general',
+        data: { internship_id: internship.internship_id } 
+       
+      });
+      
     res.status(201).json({ 
       success: true, 
       internship,
       message: "Internship created successfully" 
     });
   } catch (error) {
-    console.error("Create internship error:", error);
+    console.error("Create internship error:", error.message);
     res.status(500).json({ 
       success: false, 
       message: "Server error creating internship", 

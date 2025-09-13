@@ -8,7 +8,7 @@ import Contribution from './Contribution.js';
 import Certificate from './Certificate.js';
 import Opportunity from './Opportunity.js';
 import Connection from './Connection.js';
-
+import Notification from './Notification.js';
 
 // Define all associations
 const defineAssociations = () => {
@@ -42,16 +42,29 @@ const defineAssociations = () => {
     foreignKey: 'created_by',
     as: 'opportunities'
   });
+// A connection belongs to the user who initiated it
+Connection.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
 
-  Connection.belongsTo(User, {
-    foreignKey: 'user_id',
-    as: 'user'
-  });
+// A connection also belongs to the user who is being connected to
+Connection.belongsTo(User, {
+  foreignKey: 'connected_user_id',
+  as: 'connected_user'
+});
 
-  Connection.belongsTo(User, {
-    foreignKey: 'connected_user_id',
-    as: 'connected_user'
-  });
+// A user can have many outgoing connection requests
+User.hasMany(Connection, {
+  foreignKey: 'user_id',
+  as: 'connections'
+});
+
+// A user can also have many incoming connection requests
+User.hasMany(Connection, {
+  foreignKey: 'connected_user_id',
+  as: 'connected_to'
+});
 
   // Company Associations
   Company.belongsTo(User, {
@@ -104,7 +117,11 @@ const defineAssociations = () => {
     foreignKey: 'created_by',
     as: 'creator'
   });
+  User.hasMany(Notification, { foreignKey: 'recipient_id', as: 'notifications' });
+  Notification.belongsTo(User, { foreignKey: 'recipient_id', as: 'recipient' });
+
 };
+
 
 // Initialize associations
 defineAssociations();
@@ -119,7 +136,9 @@ const db = {
   Contribution,
   Certificate,
   Opportunity,
-  Connection
+  Connection,
+  Notification
+
 };
 
 export default db;

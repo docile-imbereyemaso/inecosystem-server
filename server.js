@@ -16,6 +16,9 @@ import contributionsRoutes from './routes/contributions.routes.js';
 import insightsRoutes from './routes/insights.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import connectionRoutes from './routes/connectionRoutes.js';
+import notificationRoutes from './routes/notification.routes.js';
+// import moduleName from './routes/c'
 
 // Load environment variables
 config();
@@ -64,6 +67,9 @@ app.use('/api/contributions', contributionsRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/connections', connectionRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
