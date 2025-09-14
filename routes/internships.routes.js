@@ -23,6 +23,7 @@ router.get('/sector/recommended', authenticateToken, getInternshipsBySector);
 router.post('/', authenticateToken, createInternship);
 router.get('/company/my-internships', authenticateToken, getCompanyInternships);
 router.put('/:id', authenticateToken, updateInternship);
+router.put('/:id/close', authenticateToken, updateInternship);
 router.delete('/:id', authenticateToken, deleteInternship);
 
 export default router;
