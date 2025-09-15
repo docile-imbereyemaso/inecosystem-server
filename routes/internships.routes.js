@@ -18,7 +18,6 @@ router.get('/:id', authenticateToken, getInternshipById);
 
 // Individual user routes
 router.get('/sector/recommended', authenticateToken, getInternshipsBySector);
-
 // Private sector user routes
 router.post('/', authenticateToken, createInternship);
 router.get('/company/my-internships', authenticateToken, getCompanyInternships);

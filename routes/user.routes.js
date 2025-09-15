@@ -21,7 +21,7 @@ router.use(authenticateToken);
 
 // User profile routes
 router.get('/profile/:userId', getUserProfile);
-router.put('/profile/:userId', updateUserProfile);
+router.put('/profile/:userId', authenticateToken, updateUserProfile);
 router.get('/stats/:userId', getUserStats);
 
 // User connections routes
