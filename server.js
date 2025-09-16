@@ -52,7 +52,6 @@ app.use(cors({
   credentials: true, // allow cookies / auth headers
 }));
 
-
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -106,8 +105,8 @@ const startServer = async () => {
     console.log('Database connection established successfully.');
     
     // Sync models with database
-    // await sequelize.sync({ alter: true });
-    console.log('Database synchronized successfully.');
+    // await sequelize.sync({ alter: true,force:true });
+    // console.log('Database synchronized successfully.');
     
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);

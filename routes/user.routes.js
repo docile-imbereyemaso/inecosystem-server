@@ -13,6 +13,8 @@ import {
   rejectConnection
 } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middleware/auth.js';
+import multer from 'multer';
+const Upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
@@ -21,7 +23,7 @@ router.use(authenticateToken);
 
 // User profile routes
 router.get('/profile/:userId', getUserProfile);
-router.put('/profile/:userId', authenticateToken, updateUserProfile);
+router.put('/profile/:userId', Upload.single('profile'), updateUserProfile);
 router.get('/stats/:userId', getUserStats);
 
 // User connections routes

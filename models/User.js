@@ -8,6 +8,8 @@ const User = sequelize.define('User', {
     primaryKey: true,
     autoIncrement: true
   },
+
+  // Core Info
   first_name: {
     type: DataTypes.STRING,
     allowNull: false
@@ -26,18 +28,35 @@ const User = sequelize.define('User', {
   },
   phone: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: false
   },
   bio: {
     type: DataTypes.TEXT,
     allowNull: true
   },
+
+  // Account Type
   user_type: {
     type: DataTypes.ENUM('individual', 'private_sector', 'tvet'),
     allowNull: false,
     defaultValue: 'individual'
   },
-  // For private_sector users
+
+  // Files
+  profile_image: {
+    type: DataTypes.STRING, // store file path / Cloudinary URL
+    allowNull: true
+  },
+  resume: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  official_document: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+
+  // Private sector-specific
   company_name: {
     type: DataTypes.STRING,
     allowNull: true
@@ -50,7 +69,8 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  // For all users
+
+  // Skills & Sectors
   skills: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     allowNull: true,
@@ -61,16 +81,24 @@ const User = sequelize.define('User', {
     allowNull: true,
     defaultValue: []
   },
+
+  // Authentication
   password: {
     type: DataTypes.STRING,
     allowNull: false
   },
-  // Approval status for private_sector users
+
+  // Status / Verification
+  status: {
+    type: DataTypes.STRING,
+    allowNull: true // e.g. student, jobseeker, employed
+  },
   is_approved: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
-  // For tvet users
+
+  // TVET-specific
   tvet_institution: {
     type: DataTypes.STRING,
     allowNull: true
@@ -79,22 +107,23 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true
   }
+
 }, {
   tableName: 'users',
   timestamps: true,
   hooks: {
     beforeSave: async (user) => {
+      // Hash password if modified
       if (user.changed('password')) {
         const saltRounds = 10;
         user.password = await bcrypt.hash(user.password, saltRounds);
       }
-      
-      // Private sector users need approval
+
+      // Default approval logic
       if (user.user_type === 'private_sector' && user.is_approved === null) {
         user.is_approved = false;
       }
-      
-      // TVET users are automatically approved (added by DBA)
+
       if (user.user_type === 'tvet') {
         user.is_approved = true;
       }
@@ -102,12 +131,11 @@ const User = sequelize.define('User', {
   }
 });
 
-// Instance method to check password
+// Instance methods
 User.prototype.validatePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// Instance method to check if user is approved
 User.prototype.isApproved = function() {
   return this.is_approved;
 };
