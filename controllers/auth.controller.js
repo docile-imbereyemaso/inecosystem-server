@@ -102,7 +102,7 @@ export const individualSignup = async (req, res) => {
       skills: Array.isArray(skills) ? skills : [],
       sectors: Array.isArray(sectors) ? sectors : [],
       password,
-      user_type: 'tvet',
+      user_type: 'individual',
       is_approved: true,
       profile_image: profileImageUrl,
       resume: resumeUrl,
