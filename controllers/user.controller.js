@@ -1,6 +1,7 @@
 import db from '../models/index.js';
 const { User, Connection, Company, Job, Internship, Certificate } = db;
 
+import {uploadToCloudinary} from '../config/cloudinary.js';
 // GET USER PROFILE
 export const getUserProfile = async (req, res) => {
   try {
@@ -67,11 +68,15 @@ export const getUserProfile = async (req, res) => {
 };
 
 // UPDATE USER PROFILE
+
 export const updateUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const updates = req.body;
+    let updates = req.body;
     
+    const fileBuffer = req.file.buffer
+    const result = await uploadToCloudinary(fileBuffer)
+    updates.photo={url: result.secure_url, public_id: result.public_id};
     // Ensure users can only update their own profile
     if (req.user.user_id !== parseInt(userId)) {
       return res.status(403).json({ 
