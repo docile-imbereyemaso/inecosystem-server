@@ -425,7 +425,7 @@ export const allJobs = async (req, res) => { try {
     const offset = (page - 1) * limit;
     // First get the jobs without including the company
     const { count, rows: jobs } = await Job.findAndCountAll({
-      order: [['created_at', 'DESC']],
+      order: [['created_at', 'ASC']],
       limit: parseInt(limit),
       offset: offset
     });
