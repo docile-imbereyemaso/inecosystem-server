@@ -1,13 +1,12 @@
-// controllers/blogController.js
-const { Blog, Company, BlogComment } = require("../models");
+const { Blog, User, BlogComment } = require("../models");
 
 // Create new blog post
-exports.createBlog = async (req, res) => {
+export const createBlog = async (req, res) => {
   try {
-    const { companyId, title, content, coverImage, tags, category, status } = req.body;
+    const { userId, title, content, coverImage, tags, category, status } = req.body;
 
     const blog = await Blog.create({
-      companyId,
+      userId,
       title,
       content,
       coverImage,
@@ -24,7 +23,7 @@ exports.createBlog = async (req, res) => {
 };
 
 // Get all blogs (with optional filters: category, status)
-exports.getBlogs = async (req, res) => {
+export const getBlogs = async (req, res) => {
   try {
     const { category, status } = req.query;
 
@@ -34,7 +33,7 @@ exports.getBlogs = async (req, res) => {
 
     const blogs = await Blog.findAll({
       where,
-      include: [{ model: Company, attributes: ["id", "name"] }],
+      include: [{ model: User, attributes: ["user_id", "first_name", "last_name"], as: "author" }],
       order: [["createdAt", "DESC"]],
     });
 
@@ -46,18 +45,18 @@ exports.getBlogs = async (req, res) => {
 };
 
 // Get single blog by ID
-exports.getBlogById = async (req, res) => {
+export const getBlogById = async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id, {
       include: [
-        { model: Company, attributes: ["id", "name"] },
-        { model: BlogComment },
+        { model: User, attributes: ["user_id", "first_name", "last_name"], as: "author" },
+        { model: BlogComment, include: [{ model: User, attributes: ["user_id", "first_name", "last_name"], as: "student" }] },
       ],
     });
 
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
-    // increase views count
+    // Increase views count
     await blog.increment("viewsCount");
 
     res.json(blog);
@@ -68,10 +67,9 @@ exports.getBlogById = async (req, res) => {
 };
 
 // Update blog
-exports.updateBlog = async (req, res) => {
+export const updateBlog = async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id);
-
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     await blog.update(req.body);
@@ -84,10 +82,9 @@ exports.updateBlog = async (req, res) => {
 };
 
 // Delete blog
-exports.deleteBlog = async (req, res) => {
+export const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findByPk(req.params.id);
-
     if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     await blog.destroy();
@@ -99,15 +96,15 @@ exports.deleteBlog = async (req, res) => {
   }
 };
 
-
-exports.addComment = async (req, res) => {
+// Add comment to blog
+export const addComment = async (req, res) => {
   try {
     const { blogId } = req.params;
-    const { studentId, comment } = req.body;
+    const { userId, comment } = req.body;
 
     const newComment = await BlogComment.create({
       blogId,
-      studentId,
+      userId,
       comment,
     });
 

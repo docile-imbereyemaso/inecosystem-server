@@ -9,7 +9,8 @@ import Certificate from './Certificate.js';
 import Opportunity from './Opportunity.js';
 import Connection from './Connection.js';
 import Notification from './Notification.js';
-
+import Blog from './Blog.js';
+import BlogComment from './blogComments.js';
 // Define all associations
 const defineAssociations = () => {
   // User Associations
@@ -17,6 +18,24 @@ const defineAssociations = () => {
     foreignKey: 'user_id',
     as: 'companies'
   });
+  User.hasMany(Blog, {
+    foreignKey: 'userId',
+    as: 'blogs'
+  }
+  )  
+
+  Blog.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'author'
+  });
+
+  // Associations
+  BlogComment.belongsTo(Blog, { foreignKey: "blogId", as: "blog" });
+  BlogComment.belongsTo(User, { foreignKey: "userId", as: "student" });
+  Blog.hasMany(BlogComment, { foreignKey: "blogId", as: "comments" });
+  User.hasMany(BlogComment, { foreignKey: "userId", as: "blogComments" });
+
+
 
   User.hasMany(Job, {
     foreignKey: 'created_by',
