@@ -414,3 +414,46 @@ export const searchJobs = async (req, res) => {
     });
   }
 };
+
+export const allJobs = async (req, res) => { try {
+    const { 
+      page = 1, 
+      limit = 10,
+      is_active 
+    } = req.query;
+    
+    const offset = (page - 1) * limit;
+    // First get the jobs without including the company
+    const { count, rows: jobs } = await Job.findAndCountAll({
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: offset
+    });
+
+
+    // Combine the data
+    const jobsWithCompany = jobs.map(job => {
+      return {
+        ...job.toJSON(),
+      };
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      jobs: jobsWithCompany,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error("Get company jobs error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: `Server error fetching company jobs`, 
+      error: error.message 
+    });
+  }
+};
