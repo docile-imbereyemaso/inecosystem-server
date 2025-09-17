@@ -10,14 +10,15 @@ import {
   getConnectedUsers,
   getPendingConnections,
   acceptConnection,
-  rejectConnection
+  rejectConnection,
+  getPublicUserImage
 } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middleware/auth.js';
 import multer from 'multer';
 const Upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
-
+router.get('/imagesNo/image', getPublicUserImage);
 // All routes require authentication
 router.use(authenticateToken);
 

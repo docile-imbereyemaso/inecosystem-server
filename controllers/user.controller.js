@@ -629,3 +629,35 @@ export const getPendingConnections = async (req, res) => {
     });
   }
 };
+
+
+// GET PUBLIC USER IMAGE (No authentication required)
+export const getPublicUserImage = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findByPk(userId, {
+      attributes: ['user_id', 'photo'],
+    });
+    
+    if (!user || !user.photo || !user.photo.url) {
+      // Return a default avatar image if no photo exists
+      return res.status(404).json({ 
+        success: false, 
+        message: "User or profile image not found" 
+      });
+    }
+    
+    // Return the image URL
+    res.status(200).json({ 
+      success: true, 
+      imageUrl: user.photo.url 
+    });
+  } catch (error) {
+    console.error("Get public user image error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching user image" 
+    });
+  }
+};

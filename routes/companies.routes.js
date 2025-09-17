@@ -13,6 +13,7 @@ const router = express.Router();
 // All routes protected with authentication
 router.post('/', authenticateToken, createCompany);
 router.get('/', authenticateToken, getCompanies);
+router.get('/all',getCompanies);
 router.get('/:id', authenticateToken, getCompanyById);
 router.put('/:id', authenticateToken, updateCompany);
 router.delete('/:id', authenticateToken, deleteCompany);

@@ -7,11 +7,13 @@ import {
   updateJob,
   deleteJob,
   getJobsBySector,
-  searchJobs
+  searchJobs,
+  allJobs
 } from '../controllers/jobs.controller.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
+router.get('/getAllJobs', allJobs);
 
 // Public routes (with authentication)
 router.get('/', authenticateToken, getJobs);
