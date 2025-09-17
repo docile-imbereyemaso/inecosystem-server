@@ -27,3 +27,5 @@ router.post('/insight-comment/:insightId', authenticateToken, addInsightComment)
 router.get('/statistics', authenticateToken, getStatistics);
 
 export default router;
+
+
