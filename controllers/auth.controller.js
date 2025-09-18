@@ -74,7 +74,7 @@ export const individualSignup = async (req, res) => {
       if (req.files.resume) {
         const uploadResult = await uploadToCloudinary(
           req.files.resume[0].buffer,
-          `resume_${Date.now()}`,
+          `resume_${Date.now()}.pdf`,
           req.files.resume[0].mimetype
         );
         resumeUrl = uploadResult.secure_url;
