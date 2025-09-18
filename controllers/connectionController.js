@@ -104,27 +104,20 @@ export const getUserConnections = async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    const connections = await Connection.findAll({
-      where: {
-       user_id,            // I am the company being connected to
-        status: 'accepted'  // only accepted connections
-      },
-      include: [
-        {
-          model: User,
-          as: 'connected_user',   // the company that connected to me
-          attributes: [
-            'user_id',
-           
-            'company_name',
-            'email',
-            'phone',
-            'first_name',
-            'last_name'
-          ]
-        }
-      ]
-    });
+   const connections = await Connection.findAll({
+  where: {
+    user_id,            // the company being connected to
+    status: 'accepted'  // only accepted connections
+  },
+  include: [
+    {
+      model: User,
+      as: 'connected_user',   // the company that connected to me
+      attributes: { exclude: ['password', 'reset_token', 'reset_token_expiry', 'createdAt', 'updatedAt'] }
+    }
+  ]
+});
+
 
     
 
